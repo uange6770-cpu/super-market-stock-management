@@ -1,0 +1,3 @@
+import { authClient, db } from '../config/supabase.js';
+export function requireAuth(req,res,next){const token=req.headers.authorization?.replace(/^Bearer\s+/i,'');if(!token)return res.status(401).json({error:'Authentication required'});authClient.auth.getUser(token).then(({data,error})=>{if(error||!data.user)return res.status(401).json({error:'Invalid or expired session'});req.user=data.user;req.token=token;next();}).catch(next);}
+export function requireAdmin(req,res,next){db.from('profiles').select('role').eq('id',req.user.id).maybeSingle().then(({data,error})=>{if(error)return next(error);if(data?.role!=='admin')return res.status(403).json({error:'Admin role required'});next();}).catch(next);}
